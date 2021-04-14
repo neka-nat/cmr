@@ -97,12 +97,6 @@ class ShapeTrainer(train_utils.Trainer):
         # For visualization
         self.vis_rend = bird_vis.VisRenderer(opts.img_size, faces.data.cpu().numpy())
 
-        # import ipdb
-        # ipdb.set_trace()
-        # for k,v in self.model.named_modules():
-        #         v.register_backward_hook(hook)
-
-
         return
 
     def init_dataset(self):

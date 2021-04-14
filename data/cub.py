@@ -25,12 +25,7 @@ from utils import transformations
 
 # -------------- flags ------------- #
 # ---------------------------------- #
-if osp.exists('/scratch1/storage'):
-    kData = '/scratch1/storage/CUB'
-elif osp.exists('/data1/shubhtuls'):
-    kData = '/data0/shubhtuls/datasets/CUB'
-else:  # Savio
-    kData = './misc/CUB_200_2011'
+kData = './misc/CUB_200_2011'
     
 flags.DEFINE_string('cub_dir', kData, 'CUB Data Directory')
 
@@ -57,8 +52,8 @@ class CUBDataset(base_data.BaseDataset):
         self.anno_sfm_path = osp.join(self.data_cache_dir, 'sfm', 'anno_%s.mat' % opts.split)
 
         if not osp.exists(self.anno_path):
-            print('%s doesnt exist!' % self.anno_path)
-            import ipdb; ipdb.set_trace()
+            print("%s doesn't exist!" % self.anno_path)
+
         self.filter_key = filter_key
 
         # Load the annotation file.
@@ -70,7 +65,7 @@ class CUBDataset(base_data.BaseDataset):
 
         self.num_imgs = len(self.anno)
         print('%d images' % self.num_imgs)
-        self.kp_perm = np.array([1, 2, 3, 4, 5, 6, 11, 12, 13, 10, 7, 8, 9, 14, 15]) - 1;
+        self.kp_perm = np.array([1, 2, 3, 4, 5, 6, 11, 12, 13, 10, 7, 8, 9, 14, 15]) - 1
 
 
 #----------- Data Loader ----------#
