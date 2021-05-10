@@ -22,6 +22,8 @@ torchfile = "^0.1.0"
 tqdm = "^4.60.0"
 visdom = "^0.1.8"
 ipdb = "^0.13.7"
+trimesh = "^3.9.16"
+pyglet = "^1.5.16"
 
 [tool.poetry.dev-dependencies]
 
