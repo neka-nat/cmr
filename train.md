@@ -2,11 +2,6 @@
 ## Pre-reqs
 
 
-### Install external loss lib
-```
-git clone https://github.com/shubhtuls/PerceptualSimilarity.git
-```
-
 ### CUB Data
 1. Download CUB-200-2011 images somewhere:
 ```
@@ -61,11 +56,11 @@ We provide evaluation code to compute the IOU curves in the paper.
 Command below runs the model with different ablation settings.
 Run it from one directory above the `cmr` directory.
 ```Bash
-python misc/benchmark/run_evals.py --split val  --name bird_net --num_train_epoch 500
+python benchmark/run_evals.py --split val  --name bird_net --num_train_epoch 500
 ```
 
 Then, run 
 ```Bash
-python misc/benchmark/plot_curvess.py --split val  --name bird_net --num_train_epoch 500
+python benchmark/plot_curves.py --split val  --name bird_net --num_train_epoch 500
 ```
 in order to see the IOU curve.
