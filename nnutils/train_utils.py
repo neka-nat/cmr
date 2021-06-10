@@ -23,7 +23,7 @@ cache_path = osp.join(curr_path, '..', 'misc', 'cachedir')
 flags.DEFINE_string('name', 'exp_name', 'Experiment Name')
 # flags.DEFINE_string('cache_dir', cache_path, 'Cachedir') # Not used!
 flags.DEFINE_integer('gpu_id', 0, 'Which gpu to use')
-flags.DEFINE_integer('num_epochs', 1000, 'Number of epochs to train')
+flags.DEFINE_integer('num_epochs', 600, 'Number of epochs to train')
 flags.DEFINE_integer('num_pretrain_epochs', 0, 'If >0, we will pretain from an existing saved model.')
 flags.DEFINE_float('learning_rate', 0.0001, 'learning rate')
 flags.DEFINE_float('beta1', 0.9, 'Momentum term of adam')

@@ -63,7 +63,7 @@ class CUBDataset(base_data.BaseDataset):
         self.anno_sfm = sio.loadmat(
             self.anno_sfm_path, struct_as_record=False, squeeze_me=True)['sfm_anno']
 
-        self.num_imgs = len(self.anno)
+        self.num_imgs = 1000 #len(self.anno)
         print('%d images' % self.num_imgs)
         self.kp_perm = np.array([1, 2, 3, 4, 5, 6, 11, 12, 13, 10, 7, 8, 9, 14, 15]) - 1
 
