@@ -34,8 +34,10 @@ from nnutils import loss_utils
 from nnutils import mesh_net
 from nnutils.nmr import NeuralRenderer
 from nnutils import geom_utils
+from nnutils.smr import SoftRenderer
 
 flags.DEFINE_string('dataset', 'cub', 'cub or pascal or p3d')
+flags.DEFINE_string('renderer', 'nmr', 'nmr or smr')
 # Weights:
 flags.DEFINE_float('kp_loss_wt', 30., 'keypoint loss weight')
 flags.DEFINE_float('mask_loss_wt', 2., 'mask loss weight')
@@ -59,7 +61,6 @@ def hook(module, grad_input, grad_output):
 class ShapeTrainer(train_utils.Trainer):
     def define_model(self):
         opts = self.opts
-
         # ----------
         # Options
         # ----------
@@ -85,12 +86,13 @@ class ShapeTrainer(train_utils.Trainer):
         # For renderering.
         faces = self.model.faces.view(1, -1, 3)
         self.faces = faces.repeat(opts.batch_size, 1, 1)
-        self.renderer = NeuralRenderer(opts.img_size)
-        self.renderer_predcam = NeuralRenderer(opts.img_size) #for camera loss via projection
+        # opts.renderer = "smr"
+        self.renderer = NeuralRenderer(opts.img_size) if opts.renderer == "nmr" else SoftRenderer(opts.img_size)
+        self.renderer_predcam = NeuralRenderer(opts.img_size) if opts.renderer == "nmr" else SoftRenderer(opts.img_size) #for camera loss via projection
 
         # Need separate NMR for each fwd/bwd call.
         if opts.texture:
-            self.tex_renderer = NeuralRenderer(opts.img_size)
+            self.tex_renderer = NeuralRenderer(opts.img_size) if opts.renderer == "nmr" else SoftRenderer(opts.img_size)
             # Only use ambient light for tex renderer
             self.tex_renderer.ambient_light_only()
 
@@ -187,14 +189,22 @@ class ShapeTrainer(train_utils.Trainer):
 
         # Render mask.
         self.mask_pred = self.renderer(self.pred_v, self.faces, proj_cam)
+        if opts.renderer == "smr":
+            self.mask_pred = self.mask_pred[0][:, 0, :, :]
 
         if opts.texture:
             self.texture_flow = self.textures
             self.textures = geom_utils.sample_textures(self.texture_flow, self.imgs)
-            tex_size = self.textures.size(2)
-            self.textures = self.textures.unsqueeze(4).repeat(1, 1, 1, 1, tex_size, 1)
-  
-            self.texture_pred = self.tex_renderer(self.pred_v.detach(), self.faces, proj_cam.detach(), textures=self.textures)
+            if opts.renderer == "smr":
+                self.textures = self.textures.contiguous()
+                bs, fs, ts, _, _ = self.textures.size()
+                self.textures = self.textures.view(bs, fs, -1, 3)
+                texture_rgba, p2f_info, _ = self.tex_renderer.forward(self.pred_v.detach(), self.faces, proj_cam.detach(), self.textures)
+                self.texture_pred = texture_rgba[:,0:3,:,:]
+            else:
+                tex_size = self.textures.size(2)
+                self.textures = self.textures.unsqueeze(4).repeat(1, 1, 1, 1, tex_size, 1)
+                self.texture_pred = self.tex_renderer(self.pred_v.detach(), self.faces, proj_cam.detach(), textures=self.textures)
         else:
             self.textures = None
 
