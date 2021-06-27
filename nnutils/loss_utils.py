@@ -377,3 +377,7 @@ class PerceptualTextureLoss(object):
         # Only use mask_gt..
         dist = self.perceptual_loss(img_pred * mask_gt, img_gt * mask_gt)
         return dist.mean()
+
+
+def sym_reg(verts):
+    return torch.mean(torch.abs(verts[:,:,1]))

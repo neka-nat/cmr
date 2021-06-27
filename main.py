@@ -35,6 +35,7 @@ from nnutils import mesh_net
 from nnutils.nmr import NeuralRenderer
 from nnutils import geom_utils
 from nnutils.smr import SoftRenderer
+import soft_renderer as sr
 
 flags.DEFINE_string('dataset', 'cub', 'cub or pascal or p3d')
 flags.DEFINE_string('renderer', 'nmr', 'nmr or smr')
@@ -47,7 +48,11 @@ flags.DEFINE_float('triangle_reg_wt', 30., 'weights to triangle smoothness prior
 flags.DEFINE_float('vert2kp_loss_wt', .16, 'reg to vertex assignment')
 flags.DEFINE_float('tex_loss_wt', .5, 'weights to tex loss')
 flags.DEFINE_float('tex_dt_loss_wt', .5, 'weights to tex dt loss')
+flags.DEFINE_float('flatten_reg_wt', 0.0004, 'weights to flatten smoothness prior')
+flags.DEFINE_float('ori_reg_wt', 0.4, 'reg to orientation')
+flags.DEFINE_float('stop_ori_epoch', 3., 'when to stop usint this constraint')
 flags.DEFINE_boolean('use_gtpose', True, 'if true uses gt pose for projection, but camera still gets trained.')
+flags.DEFINE_boolean('add_smr_loss', False, 'if true adds smr losses to total_loss.')
 
 opts = flags.FLAGS
 
@@ -124,6 +129,10 @@ class ShapeTrainer(train_utils.Trainer):
         if self.opts.texture:
             self.texture_loss = loss_utils.PerceptualTextureLoss()
             self.texture_dt_loss_fn = loss_utils.texture_dt_loss
+        
+        if self.opts.add_smr_loss:
+            self.flatten_loss_fn = sr.FlattenLoss(self.model.faces)
+            self.ori_reg_fn = loss_utils.sym_reg
 
 
     def set_input(self, batch):
@@ -221,6 +230,9 @@ class ShapeTrainer(train_utils.Trainer):
         self.vert2kp_loss = self.entropy_loss(self.vert2kp)
         self.deform_reg = self.deform_reg_fn(self.delta_v)
         self.triangle_loss = self.triangle_loss_fn(self.pred_v)
+        if opts.add_smr_loss:
+            self.flatten_loss = self.flatten_loss_fn(self.pred_v).mean()
+            self.ori_loss = self.ori_reg_fn(self.pred_v)
 
         # Finally sum up the loss.
         # Instance loss:
@@ -236,6 +248,12 @@ class ShapeTrainer(train_utils.Trainer):
         self.total_loss += opts.triangle_reg_wt * self.triangle_loss
 
         self.total_loss += opts.tex_dt_loss_wt * self.tex_dt_loss
+        
+        if opts.add_smr_loss:
+            self.total_loss += self.flatten_loss * opts.flatten_reg_wt
+            if(self.curr_epoch < opts.stop_ori_epoch):
+                # constrain prediction to be symmetric on the given axis
+                self.total_loss += self.ori_loss * opts.ori_reg_wt
 
 
     def get_current_visuals(self):
@@ -312,6 +330,10 @@ class ShapeTrainer(train_utils.Trainer):
         if self.opts.texture:
             sc_dict['tex_loss'] = self.tex_loss.item()
             sc_dict['tex_dt_loss'] = self.tex_dt_loss.item()
+        if self.opts.add_smr_loss:
+            sc_dict['flatten_loss'] =  self.flatten_loss
+            sc_dict['ori_loss'] =  self.ori_loss
+            
 
         return sc_dict
 
