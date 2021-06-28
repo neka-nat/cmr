@@ -146,6 +146,7 @@ class Trainer():
         dataset_size = len(self.dataloader)
 
         for epoch in range(opts.num_pretrain_epochs, opts.num_epochs):
+            self.curr_epoch = epoch
             epoch_iter = 0
             for i, batch in enumerate(self.dataloader):
                 iter_start_time = time.time()
