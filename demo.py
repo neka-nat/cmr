@@ -23,7 +23,7 @@ from nnutils import predictor as pred_util
 from utils import image as img_util
 
 
-flags.DEFINE_string('img_path', 'data/im1963.jpg', 'Image to run')
+flags.DEFINE_multi_string('img_paths', ['misc/demo_data/img1.jpg', 'misc/demo_data/img2.jpg'], 'Image to run')
 flags.DEFINE_integer('img_size', 256, 'image size the network was trained on.')
 
 opts = flags.FLAGS
@@ -50,7 +50,7 @@ def preprocess_image(img_path, img_size=256):
     return img
 
 
-def visualize(img, outputs, renderer):
+def visualize(img, outputs, renderer, outimg_path):
     vert = outputs['verts'][0]
     cam = outputs['cam_pred'][0]
     texture = outputs['texture'][0]
@@ -94,24 +94,24 @@ def visualize(img, outputs, renderer):
     plt.axis('off')
     plt.draw()
     plt.show()
-    print('saving file to demo.png')
-    plt.savefig('demo.png')
+    print('saving file to %s' % outimg_path)
+    plt.savefig(outimg_path)
 
 
 def main(_):
+    for i, img_path in enumerate(opts.img_paths):
+        img = preprocess_image(img_path, img_size=opts.img_size)
 
-    img = preprocess_image(opts.img_path, img_size=opts.img_size)
+        batch = {'img': torch.Tensor(np.expand_dims(img, 0))}
 
-    batch = {'img': torch.Tensor(np.expand_dims(img, 0))}
+        predictor = pred_util.MeshPredictor(opts)
+        outputs = predictor.predict(batch)
 
-    predictor = pred_util.MeshPredictor(opts)
-    outputs = predictor.predict(batch)
+        # This is resolution
+        renderer = predictor.vis_rend
+        renderer.set_light_dir([0, 1, -1], 0.4)
 
-    # This is resolution
-    renderer = predictor.vis_rend
-    renderer.set_light_dir([0, 1, -1], 0.4)
-
-    visualize(img, outputs, predictor.vis_rend)
+        visualize(img, outputs, predictor.vis_rend, f"demo_{i}.png")
 
 
 if __name__ == '__main__':
