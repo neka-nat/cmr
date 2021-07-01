@@ -24,7 +24,7 @@ import torchvision
 from torch.autograd import Variable
 import scipy.io as sio
 from collections import OrderedDict
-from mlflow import log_metric, log_param, log_artifact
+from mlflow import log_metric, log_param, log_artifacts
 
 from data import cub as cub_data
 from utils import visutil
@@ -68,7 +68,6 @@ def hook(module, grad_input, grad_output):
 
 class ShapeTrainer(train_utils.Trainer):
     def log_param(self):
-        log_param("description", "test")
         log_param("max_data_num", opts.max_data_num)
         log_param("num_epochs", opts.num_epochs)
         log_param("sphere_initial", opts.sphere_initial)
@@ -371,6 +370,7 @@ def main(_):
     trainer.log_param()
     trainer.init_training()
     trainer.train()
+    log_artifacts(f"misc/cachedir/snapshots/{opts.name}")
 
 if __name__ == '__main__':
     app.run(main)
