@@ -20,12 +20,14 @@ import scipy.io as sio
 from nnutils import mesh_net
 from nnutils import geom_utils
 from nnutils.nmr import NeuralRenderer
+from utils import mesh
 from utils import bird_vis
 
 # These options are off by default, but used for some ablations reported.
 flags.DEFINE_boolean('ignore_pred_delta_v', False, 'Use only mean shape for prediction')
 flags.DEFINE_boolean('use_sfm_ms', False, 'Uses sfm mean shape for prediction')
 flags.DEFINE_boolean('use_sfm_camera', False, 'Uses sfm mean camera')
+flags.DEFINE_boolean('sphere_initial', False, 'Use sphere mesh for initial shape')
 
 
 class MeshPredictor(object):
@@ -53,14 +55,17 @@ class MeshPredictor(object):
             anno_sfm_path = osp.join(opts.cub_cache_dir, 'sfm', 'anno_testval.mat')
             anno_sfm = sio.loadmat(
                 anno_sfm_path, struct_as_record=False, squeeze_me=True)
-            sfm_mean_shape = torch.Tensor(np.transpose(anno_sfm['S'])).cuda(
-                device=opts.gpu_id)
-            self.sfm_mean_shape = Variable(sfm_mean_shape, requires_grad=False)
-            self.sfm_mean_shape = self.sfm_mean_shape.unsqueeze(0).repeat(
-                opts.batch_size, 1, 1)
-            sfm_face = torch.LongTensor(anno_sfm['conv_tri'] - 1).cuda(
-                device=opts.gpu_id)
-            self.sfm_face = Variable(sfm_face, requires_grad=False)
+            if opts.sphere_initial:
+                sfm_mean_shape, sfm_face = mesh.create_sphere(3)
+            else:
+                sfm_mean_shape = torch.Tensor(np.transpose(anno_sfm['S'])).cuda(
+                    device=opts.gpu_id)
+                self.sfm_mean_shape = Variable(sfm_mean_shape, requires_grad=False)
+                self.sfm_mean_shape = self.sfm_mean_shape.unsqueeze(0).repeat(
+                    opts.batch_size, 1, 1)
+                sfm_face = torch.LongTensor(anno_sfm['conv_tri'] - 1).cuda(
+                    device=opts.gpu_id)
+                self.sfm_face = Variable(sfm_face, requires_grad=False)
             faces = self.sfm_face.view(1, -1, 3)
         else:
             # For visualization

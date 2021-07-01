@@ -28,6 +28,7 @@ from utils import transformations
 kData = './misc/CUB_200_2011'
     
 flags.DEFINE_string('cub_dir', kData, 'CUB Data Directory')
+flags.DEFINE_integer('max_data_num', 1000, 'Max number of training images')
 
 curr_path = osp.dirname(osp.abspath(__file__))
 cache_path = osp.join(curr_path, '..', 'misc', 'cachedir')
@@ -63,7 +64,8 @@ class CUBDataset(base_data.BaseDataset):
         self.anno_sfm = sio.loadmat(
             self.anno_sfm_path, struct_as_record=False, squeeze_me=True)['sfm_anno']
 
-        self.num_imgs = 1000 #len(self.anno)
+        data_len = len(self.anno) if opts.max_data_num < 0 else opts.max_data_num
+        self.num_imgs = data_len
         print('%d images' % self.num_imgs)
         self.kp_perm = np.array([1, 2, 3, 4, 5, 6, 11, 12, 13, 10, 7, 8, 9, 14, 15]) - 1
 

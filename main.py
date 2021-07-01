@@ -29,6 +29,7 @@ from data import cub as cub_data
 from utils import visutil
 from utils import bird_vis
 from utils import image as image_utils
+from utils import mesh
 from nnutils import train_utils
 from nnutils import loss_utils
 from nnutils import mesh_net
@@ -53,6 +54,7 @@ flags.DEFINE_float('ori_reg_wt', 0.4, 'reg to orientation')
 flags.DEFINE_float('stop_ori_epoch', 3., 'when to stop usint this constraint')
 flags.DEFINE_boolean('use_gtpose', True, 'if true uses gt pose for projection, but camera still gets trained.')
 flags.DEFINE_boolean('add_smr_loss', False, 'if true adds smr losses to total_loss.')
+flags.DEFINE_boolean('sphere_initial', False, 'Use sphere mesh for initial shape')
 
 opts = flags.FLAGS
 
@@ -72,7 +74,10 @@ class ShapeTrainer(train_utils.Trainer):
         self.symmetric = opts.symmetric
         anno_sfm_path = osp.join(opts.cub_cache_dir, 'sfm', 'anno_train.mat')
         anno_sfm = sio.loadmat(anno_sfm_path, struct_as_record=False, squeeze_me=True)
-        sfm_mean_shape = (np.transpose(anno_sfm['S']), anno_sfm['conv_tri']-1)
+        if opts.sphere_initial:
+            sfm_mean_shape = mesh.create_sphere(3)
+        else:
+            sfm_mean_shape = (np.transpose(anno_sfm['S']), anno_sfm['conv_tri']-1)
 
         img_size = (opts.img_size, opts.img_size)
         self.model = mesh_net.MeshNet(
