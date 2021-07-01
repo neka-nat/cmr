@@ -24,6 +24,7 @@ import torchvision
 from torch.autograd import Variable
 import scipy.io as sio
 from collections import OrderedDict
+from mlflow import log_metric, log_param, log_artifact
 
 from data import cub as cub_data
 from utils import visutil
@@ -66,6 +67,17 @@ def hook(module, grad_input, grad_output):
     return grad_input
 
 class ShapeTrainer(train_utils.Trainer):
+    def log_param(self):
+        log_param("description", "test")
+        log_param("max_data_num", opts.max_data_num)
+        log_param("num_epochs", opts.num_epochs)
+        log_param("sphere_initial", opts.sphere_initial)
+        log_param("use_gtpose", opts.use_gtpose)
+        log_param("kp_loss_wt", opts.kp_loss_wt)
+        log_param("vert2kp_loss_wt", opts.vert2kp_loss_wt)
+        log_param("renderer", opts.renderer)
+        log_param("add_smr_loss", opts.add_smr_loss)
+
     def define_model(self):
         opts = self.opts
         # ----------
@@ -260,6 +272,16 @@ class ShapeTrainer(train_utils.Trainer):
                 # constrain prediction to be symmetric on the given axis
                 self.total_loss += self.ori_loss * opts.ori_reg_wt
 
+        log_metric("kp_loss", float(self.kp_loss.cpu().detach().numpy()))
+        log_metric("mask_loss", float(self.mask_loss.cpu().detach().numpy()))
+        log_metric("vert2kp_loss", float(self.vert2kp_loss.cpu().detach().numpy()))
+        log_metric("deform_reg", float(self.deform_reg.cpu().detach().numpy()))
+        log_metric("triangle_loss", float(self.triangle_loss.cpu().detach().numpy()))
+        log_metric("cam_loss", float(self.cam_loss.cpu().detach().numpy()))
+        log_metric("tex_loss", float(self.tex_loss.cpu().detach().numpy()))
+        log_metric("tex_dt_loss", float(self.tex_dt_loss.cpu().detach().numpy()))
+        log_metric("total_loss", float(self.total_loss.cpu().detach().numpy()))
+
 
     def get_current_visuals(self):
         vis_dict = {}
@@ -346,6 +368,7 @@ class ShapeTrainer(train_utils.Trainer):
 def main(_):
     torch.manual_seed(0)
     trainer = ShapeTrainer(opts)
+    trainer.log_param()
     trainer.init_training()
     trainer.train()
 

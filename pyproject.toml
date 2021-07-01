@@ -24,6 +24,7 @@ visdom = "^0.1.8"
 ipdb = "^0.13.7"
 trimesh = "^3.9.16"
 pyglet = "^1.5.16"
+mlflow = "^1.18.0"
 
 [tool.poetry.dev-dependencies]
 
