@@ -39,7 +39,7 @@ flags.DEFINE_float('jitter_frac', 0.05,
                    'bbox is jittered by this fraction of max_dim')
 
 flags.DEFINE_enum('split', 'train', ['train', 'val', 'all', 'test'], 'eval split')
-flags.DEFINE_integer('num_kps', 15, 'The dataloader should override these.')
+flags.DEFINE_integer('num_kps', 8, 'The dataloader should override these.')
 flags.DEFINE_integer('n_data_workers', 4, 'Number of data loading workers')
 
 

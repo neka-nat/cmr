@@ -57,7 +57,7 @@ flags.DEFINE_float('ori_reg_wt', 0.4, 'reg to orientation')
 flags.DEFINE_float('stop_ori_epoch', 3., 'when to stop usint this constraint')
 flags.DEFINE_boolean('use_gtpose', True, 'if true uses gt pose for projection, but camera still gets trained.')
 flags.DEFINE_boolean('add_smr_loss', False, 'if true adds smr losses to total_loss.')
-flags.DEFINE_boolean('sphere_initial', False, 'Use sphere mesh for initial shape')
+flags.DEFINE_boolean('sphere_initial', True, 'Use sphere mesh for initial shape')
 
 opts = flags.FLAGS
 
