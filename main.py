@@ -27,6 +27,7 @@ from collections import OrderedDict
 from mlflow import log_metric, log_param, log_artifacts
 
 from data import cub as cub_data
+from data import food as food_data
 from utils import visutil
 from utils import bird_vis
 from utils import image as image_utils
@@ -39,7 +40,8 @@ from nnutils import geom_utils
 from nnutils.smr import SoftRenderer
 import soft_renderer as sr
 
-flags.DEFINE_string('dataset', 'cub', 'cub or pascal or p3d')
+# flags.DEFINE_string('dataset', 'cub', 'cub or pascal or p3d')
+flags.DEFINE_string('dataset', 'food', 'cub or pascal or p3d')
 flags.DEFINE_string('renderer', 'nmr', 'nmr or smr')
 # Weights:
 flags.DEFINE_float('kp_loss_wt', 30., 'keypoint loss weight')
@@ -126,6 +128,8 @@ class ShapeTrainer(train_utils.Trainer):
         opts = self.opts
         if opts.dataset == 'cub':
             self.data_module = cub_data
+        elif opts.dataset == 'food':
+            self.data_module = food_data
         else:
             print('Unknown dataset %d!' % opts.dataset)
 
